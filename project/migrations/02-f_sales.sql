@@ -1,1 +1,2 @@
-ALTER TABLE mart.f_sales ADD COLUMN status varchar(8);
+ALTER TABLE mart.f_sales
+ADD COLUMN status varchar(8);

@@ -5,7 +5,7 @@ import pandas as pd
 
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.http.hooks.http import HttpHook
@@ -45,7 +45,8 @@ def get_report(ti):
     report_id = None
 
     for i in range(20):
-        response = requests.get(f'{base_url}/get_report?task_id={task_id}', headers=headers)
+        response = requests.get(
+            f'{base_url}/get_report?task_id={task_id}', headers=headers)
         response.raise_for_status()
         print(f'Response is {response.content}')
         status = json.loads(response.content)['status']
@@ -66,22 +67,25 @@ def get_increment(date, ti):
     print('Making request get_increment')
     report_id = ti.xcom_pull(key='report_id')
     response = requests.get(
-        f'{base_url}/get_increment?report_id={report_id}&date={str(date)}T00:00:00',
+        f'{base_url}/get_increment?report_id={
+            report_id}&date={str(date)}T00:00:00',
         headers=headers)
     response.raise_for_status()
     print(f'Response is {response.content}')
 
     increment_id = json.loads(response.content)['data']['increment_id']
     if not increment_id:
-        raise ValueError(f'Increment is empty. Most probably due to error in API call.')
-    
+        raise ValueError(
+            'Increment is empty. Most probably due to error in API call.')
+
     ti.xcom_push(key='increment_id', value=increment_id)
     print(f'increment_id={increment_id}')
 
 
 def upload_data_to_staging(filename, date, pg_table, pg_schema, ti):
     increment_id = ti.xcom_pull(key='increment_id')
-    s3_filename = f'https://storage.yandexcloud.net/s3-sprint3/cohort_{cohort}/{nickname}/project/{increment_id}/{filename}'
+    s3_filename = f'https://storage.yandexcloud.net/s3-sprint3/cohort_{
+        cohort}/{nickname}/project/{increment_id}/{filename}'
     print(s3_filename)
     local_filename = date.replace('-', '') + '_' + filename
     print(local_filename)
@@ -91,15 +95,16 @@ def upload_data_to_staging(filename, date, pg_table, pg_schema, ti):
     print(response.content)
 
     df = pd.read_csv(local_filename)
-    df=df.drop('id', axis=1)
-    df=df.drop_duplicates(subset=['uniq_id'])
+    df = df.drop('id', axis=1)
+    df = df.drop_duplicates(subset=['uniq_id'])
 
     if 'status' not in df.columns:
         df['status'] = 'shipped'
 
     postgres_hook = PostgresHook(postgres_conn_id)
     engine = postgres_hook.get_sqlalchemy_engine()
-    row_count = df.to_sql(pg_table, engine, schema=pg_schema, if_exists='append', index=False)
+    row_count = df.to_sql(pg_table, engine, schema=pg_schema,
+                          if_exists='append', index=False)
     print(f'{row_count} rows was inserted')
 
 
@@ -171,11 +176,11 @@ with DAG(
     )
 
     (
-            generate_report
-            >> get_report
-            >> get_increment
-            >> upload_user_order_inc
-            >> [update_d_item_table, update_d_city_table, update_d_customer_table]
-            >> update_f_sales
-            >> insert_f_customer_retention
+        generate_report
+        >> get_report
+        >> get_increment
+        >> upload_user_order_inc
+        >> [update_d_item_table, update_d_city_table, update_d_customer_table]
+        >> update_f_sales
+        >> insert_f_customer_retention
     )

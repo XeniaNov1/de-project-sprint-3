@@ -1,1 +1,2 @@
-ALTER TABLE staging.user_order_log ADD COLUMN status varchar(8);
+ALTER TABLE staging.user_order_log
+ADD COLUMN status varchar(8);
