@@ -17,20 +17,12 @@ with open('project/migrations/01-uol.sql', 'r') as uol01:
     conn.commit()
     logger.info('First transaction was commited')
 
-
-# with open('project/migrations/02-f_sales.sql', 'r') as fsales02:
-#     f_sales_data = fsales02.read()
-#     logger.debug(f'The file is read:\n{f_sales_data}')
-#     cur.execute(f_sales_data)
-#     conn.commit()
-#     logger.info('Second transaction was commited')
-
-with open('project/migrations/03-create-mart.f_customer_retention.sql', 'r') as custret03:
+with open('project/migrations/02-create-mart.f_customer_retention.sql', 'r') as custret03:
     ret_data = custret03.read()
     logger.debug(f'The file is read:\n{ret_data}')
     cur.execute(ret_data)
     conn.commit()
-    logger.info('Third transaction was commited')
+    logger.info('Second transaction was commited')
 
 cur.close()
 conn.close()
